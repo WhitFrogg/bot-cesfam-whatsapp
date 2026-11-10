@@ -3,7 +3,7 @@ import json
 
 app = FastAPI()
 
-# Diccionario temporal para guardar el estado conversacional de los pacientes por su númer
+# Diccionario temporal para guardar el estado conversacional de los pacientes por su número
 user_states = {}
 
 # TOKEN DE VERIFICACIÓN (Debe coincidir exactamente con el que pongas en el panel de Meta)
@@ -13,16 +13,13 @@ VERIFY_TOKEN = "cesfam123"
 def home():
     return {"status": "Servidor del Bot CESFAM Activo en la Nube"}
 
-# ---------------------------------------------------------
 # Endpoint GET obligatorio para que Meta valide el Webhook
-# ---------------------------------------------------------
 @app.get("/webhook")
 async def verify_webhook(request: Request):
     mode = request.query_params.get("hub.mode")
     token = request.query_params.get("hub.verify_token")
     challenge = request.query_params.get("hub.challenge")
 
-    # Imprimir en los logs de Render lo que envía Meta
     print(f"🔍 Intento de verificación recibido -> Mode: {mode}, Token: {token}, Challenge: {challenge}")
 
     if mode == "subscribe" and token == VERIFY_TOKEN:
@@ -33,13 +30,12 @@ async def verify_webhook(request: Request):
     return Response(content="Token mismatch", status_code=403)
 
 
-# Endpoint que Meta (WhatsApp) llamará cada vez que llegue un mensaje
+# Endpoint POST que Meta (WhatsApp) llamará cada vez que llegue un mensaje
 @app.post("/webhook")
 async def receive_webhook(request: Request):
     body = await request.json()
     
     try:
-        # Extraer el mensaje entrante desde la estructura de datos que envía Meta
         entry = body.get("entry", [])[0]
         changes = entry.get("changes", [])[0]
         value = changes.get("value", {})
@@ -47,10 +43,9 @@ async def receive_webhook(request: Request):
         
         if messages:
             msg = messages[0]
-            phone_number = msg.get("from") # Número de teléfono del paciente
+            phone_number = msg.get("from")
             msg_body = ""
             
-            # Verificar si el usuario respondió con texto normal o presionó un botón interactivo
             if msg.get("type") == "text":
                 msg_body = msg.get("text", {}).get("body", "").strip()
             elif msg.get("type") == "interactive":
@@ -58,10 +53,7 @@ async def receive_webhook(request: Request):
                 if interactive_type == "button_reply":
                     msg_body = msg.get("interactive", {}).get("button_reply", {}).get("id", "").strip()
             
-            # Procesar el flujo conversacional según el estado actual del usuario
             response_message = process_conversation_flow(phone_number, msg_body)
-            
-            # Aquí se conectaría la API de Meta para enviar la respuesta de vuelta al teléfono del usuario
             print(f"Enviando al número {phone_number}: {response_message}")
             
     except Exception as e:
@@ -88,7 +80,7 @@ def process_conversation_flow(phone: str, text: str):
             
     # Paso 2: El usuario ingresa su fecha de nacimiento
     elif current_state == "WAITING_BIRTHDATE":
-        user_states[phone]["birthdate"] = text # Ej: 15/04/1978
+        user_states[phone]["birthdate"] = text
         user_states[phone]["step"] = "WAITING_SEX"
         return "Perfecto. Por último, indique su sexo administrativo (Femenino / Masculino):"
         
@@ -98,17 +90,12 @@ def process_conversation_flow(phone: str, text: str):
         birthdate = user_states[phone]["birthdate"]
         sex = user_states[phone]["sex"]
         
-        # Simulación de transformación a Trama Estándar HL7 (PID-7 y PID-8)
         parts = birthdate.split("/")
         hl7_date = f"{parts[2]}{parts[1]}{parts[0]}" if len(parts) == 3 else "19780415"
         
         hl7_segment = f"PID|||123456^^^MR||Paciente^Ejemplo||{hl7_date}|{sex}"
         
         user_states[phone]["step"] = "COMPLETED"
-        return f"¡Datos sincronizados con éxito en el sistema del CESFAM!\n\n(Trama HL7 generada y enviada al middleware Mirth Connect):\n{hl7_segment}"
-        
-    else:
-        return "Su proceso de confirmación ya se encuentra finalizado. ¡Nos vemos en el CESFAM!"
         return f"¡Datos sincronizados con éxito en el sistema del CESFAM!\n\n(Trama HL7 generada y enviada al middleware Mirth Connect):\n{hl7_segment}"
         
     else:
