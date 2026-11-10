@@ -9,8 +9,8 @@ user_states = {}
 
 # CREDENCIALES DE META WHATSAPP
 VERIFY_TOKEN = "cesfam123"
-WHATSAPP_TOKEN = "EAAQEXeRY6fMBS5ZAZCIazsGjLiXzToPcEyC8ZBOQLQK0MYPfBADORgT389QozEla2zPUydqoHRMsLAxmC44aYXxr7ksMAP3e6CWMHuOVOHoECV8kfPG4EZCZAr7eFOgm6C1yHnwSoMEvnfOVv0tZA1S2zNChZAtxcSGg4c3ihuZAQIe6DxqCcyZAXafqxhIIBZB1oaBWtQUvEk6s1xthXnCrdj5PYdE0hxHU7ZBv2YhGfdKfBYcpI8pqtIKhMyF76u94YuNt3WMGOS7bROZAXDT9EaZCV"  # <--- Pega tu token real aquí
-PHONE_NUMBER_ID = "1511997975323511"  # ID de número de prueba de Meta
+WHATSAPP_TOKEN = "EAAQEXeRY6fMBSyxk5VCRXhS1XqEjWZAXGWRztJ1oiyIGZBC6KZBNy2eu9UajLIAAXXJbCWHK3kF3KR9ZB8VKv0ZBqZBlbwkSnh8EUqr0PaK5wUoxAN9uk3Sx8O8ZCh2katXvTip0rgk8wGQbn4zALwEbtTLr4qv6ukWPEqbD3O3vpVULy3dhWrNzhdZBj7EX4xY0hhB9f9ZCdoJY8jKoKSZCg4uPOXTSmpweu90xUIlXgi1CNdYZCcUyzN5qWJSkkSdJXwB7yv3weM6jgIBAEmNyrUt"
+PHONE_NUMBER_ID = "1511997975323511"
 
 @app.get("/")
 def home():
@@ -39,7 +39,6 @@ async def receive_webhook(request: Request):
         changes = entry.get("changes", [])[0]
         value = changes.get("value", {})
         
-        # Validar si el webhook trae mensajes de usuarios
         messages = value.get("messages", [])
         if messages:
             msg = messages[0]
@@ -53,8 +52,8 @@ async def receive_webhook(request: Request):
                 if interactive_type == "button_reply":
                     msg_body = msg.get("interactive", {}).get("button_reply", {}).get("id", "").strip()
             
-            if msg_body:
-                print(f"Mensaje de {phone_number}: {msg_body}")
+            if msg_body and phone_number:
+                print(f"Procesando mensaje de {phone_number}: {msg_body}")
                 response_message = process_conversation_flow(phone_number, msg_body)
                 send_whatsapp_message(phone_number, response_message)
                 
