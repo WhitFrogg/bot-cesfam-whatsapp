@@ -32,13 +32,15 @@ async def verify_webhook(request: Request):
 @app.post("/webhook")
 async def receive_webhook(request: Request):
     body = await request.json()
+    print(f"WEBHOOK RECIBIDO DE META: {json.dumps(body, indent=2)}")
     
     try:
         entry = body.get("entry", [])[0]
         changes = entry.get("changes", [])[0]
         value = changes.get("value", {})
-        messages = value.get("messages", [])
         
+        # Validar si el webhook trae mensajes de usuarios
+        messages = value.get("messages", [])
         if messages:
             msg = messages[0]
             phone_number = msg.get("from")
@@ -51,13 +53,15 @@ async def receive_webhook(request: Request):
                 if interactive_type == "button_reply":
                     msg_body = msg.get("interactive", {}).get("button_reply", {}).get("id", "").strip()
             
-            response_message = process_conversation_flow(phone_number, msg_body)
-            send_whatsapp_message(phone_number, response_message)
-            
+            if msg_body:
+                print(f"Mensaje de {phone_number}: {msg_body}")
+                response_message = process_conversation_flow(phone_number, msg_body)
+                send_whatsapp_message(phone_number, response_message)
+                
     except Exception as e:
         print(f"Error procesando el webhook: {e}")
         
-    return {"status": "EVENT_RECEIVED"}
+    return {"status": "EVENT_RECEIVED"}}
 
 def send_whatsapp_message(to_phone: str, message: str):
     url = f"https://graph.facebook.com/v20.0/{PHONE_NUMBER_ID}/messages"
