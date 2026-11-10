@@ -1,15 +1,36 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response, HTTPException
 import json
 
 app = FastAPI()
 
 # Diccionario temporal para guardar el estado conversacional de los pacientes por su número
-# (En un sistema real de producción, esto se conecta a una base de datos como PostgreSQL o Supabase)
 user_states = {}
+
+# TOKEN DE VERIFICACIÓN (Debe coincidir exactamente con el que pongas en el panel de Meta)
+VERIFY_TOKEN = "cesfam123"
 
 @app.get("/")
 def home():
     return {"status": "Servidor del Bot CESFAM Activo en la Nube"}
+
+# ---------------------------------------------------------
+# NUEVO: Endpoint GET obligatorio para que Meta valide el Webhook
+# ---------------------------------------------------------
+@app.get("/webhook")
+async def verify_webhook(request: Request):
+    mode = request.query_params.get("hub.mode")
+    token = request.query_params.get("hub.verify_token")
+    challenge = request.query_params.get("hub.challenge")
+
+    if mode and token:
+        if mode == "subscribe" and token == VERIFY_TOKEN:
+            # Responde con el challenge en texto plano que exige Meta
+            return Response(content=challenge, media_type="text/plain")
+        else:
+            raise HTTPException(status_code=403, detail="Verification token mismatch")
+    
+    raise HTTPException(status_code=400, detail="Missing query parameters")
+
 
 # Endpoint que Meta (WhatsApp) llamará cada vez que llegue un mensaje
 @app.post("/webhook")
@@ -77,11 +98,16 @@ def process_conversation_flow(phone: str, text: str):
         sex = user_states[phone]["sex"]
         
         # Simulación de transformación a Trama Estándar HL7 (PID-7 y PID-8)
-        # Transformando DD/MM/AAAA a formato HL7 YYYYMMDD (Ej: 19780415)
         parts = birthdate.split("/")
         hl7_date = f"{parts[2]}{parts[1]}{parts[0]}" if len(parts) == 3 else "19780415"
         
         hl7_segment = f"PID|||123456^^^MR||Paciente^Ejemplo||{hl7_date}|{sex}"
+        
+        user_states[phone]["step"] = "COMPLETED"
+        return f"¡Datos sincronizados con éxito en el sistema del CESFAM!\n\n(Trama HL7 generada y enviada al middleware Mirth Connect):\n{hl7_segment}"
+        
+    else:
+        return "Su proceso de confirmación ya se encuentra finalizado. ¡Nos vemos en el CESFAM!"
         
         user_states[phone]["step"] = "COMPLETED"
         return f"¡Datos sincronizados con éxito en el sistema del CESFAM!\n\n(Trama HL7 generada y enviada al middleware Mirth Connect):\n{hl7_segment}"
