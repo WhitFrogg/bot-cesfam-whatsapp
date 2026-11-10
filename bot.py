@@ -22,14 +22,15 @@ async def verify_webhook(request: Request):
     token = request.query_params.get("hub.verify_token")
     challenge = request.query_params.get("hub.challenge")
 
-    if mode and token:
-        if mode == "subscribe" and token == VERIFY_TOKEN:
-            # Responde con el challenge en texto plano que exige Meta
-            return Response(content=challenge, media_type="text/plain")
-        else:
-            raise HTTPException(status_code=403, detail="Verification token mismatch")
+    # Imprimir en los logs de Render lo que envía Meta
+    print(f"🔍 Intento de verificación recibido -> Mode: {mode}, Token: {token}, Challenge: {challenge}")
+
+    if mode == "subscribe" and token == VERIFY_TOKEN:
+        print("✅ ¡Verificación exitosa! Retornando challenge.")
+        return Response(content=str(challenge), media_type="text/plain", status_code=200)
     
-    raise HTTPException(status_code=400, detail="Missing query parameters")
+    print("❌ Error de verificación: El token no coincide o faltan parámetros.")
+    return Response(content="Token mismatch", status_code=403)
 
 
 # Endpoint que Meta (WhatsApp) llamará cada vez que llegue un mensaje
