@@ -14,7 +14,7 @@ def home():
     return {"status": "Servidor del Bot CESFAM Activo en la Nube"}
 
 # ---------------------------------------------------------
-# NUEVO: Endpoint GET obligatorio para que Meta valide el Webhook
+# Endpoint GET obligatorio para que Meta valide el Webhook
 # ---------------------------------------------------------
 @app.get("/webhook")
 async def verify_webhook(request: Request):
@@ -109,8 +109,6 @@ def process_conversation_flow(phone: str, text: str):
         
     else:
         return "Su proceso de confirmación ya se encuentra finalizado. ¡Nos vemos en el CESFAM!"
-        
-        user_states[phone]["step"] = "COMPLETED"
         return f"¡Datos sincronizados con éxito en el sistema del CESFAM!\n\n(Trama HL7 generada y enviada al middleware Mirth Connect):\n{hl7_segment}"
         
     else:
