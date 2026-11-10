@@ -3,7 +3,7 @@ import json
 
 app = FastAPI()
 
-# Diccionario temporal para guardar el estado conversacional de los pacientes por su número
+# Diccionario temporal para guardar el estado conversacional de los pacientes por su númer
 user_states = {}
 
 # TOKEN DE VERIFICACIÓN (Debe coincidir exactamente con el que pongas en el panel de Meta)
