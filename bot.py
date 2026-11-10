@@ -9,8 +9,8 @@ user_states = {}
 
 # CREDENCIALES DE META WHATSAPP
 VERIFY_TOKEN = "cesfam123"
-WHATSAPP_TOKEN = "EAAQEXeRY6fMBS30Lg7irXYkYZBZAOxqg0Wzq2aLbZAbFiJ7CCZC8i9cRYmGYTBtKRf9J1YtF92eu0LkX6uHZCyiDj7Hju1fJRjmfKQDRpPGc5cCTlFP1iEp8I764ey7Gi8RZANErGm1p62ezzuO9RH6BwyrGgXBeaZC1C5ytk5MJl0rokz3QYY4wmfyRaNI53x00tm6J3JzEOL1pZCf3yyXf6I8ee22xB1cx7bS3pZB4Dr33uhU9l0w9UyDhCiXSd6aZAKH8fW9G65z0AvC25KBHVy"  # <--- Pega tu token entre las comillas
-PHONE_NUMBER_ID = "1511997975323511"  # <--- Tu ID de número de teléfono de prueba
+WHATSAPP_TOKEN = "EAAQEXeRY6fMBS30Lg7irXYkYZBZAOxqg0Wzq2aLbZAbFiJ7CCZC8i9cRYmGYTBtKRf9J1YtF92eu0LkX6uHZCyiDj7Hju1fJRjmfKQDRpPGc5cCTlFP1iEp8I764ey7Gi8RZANErGm1p62ezzuO9RH6BwyrGgXBeaZC1C5ytk5MJl0rokz3QYY4wmfyRaNI53x00tm6J3JzEOL1pZCf3yyXf6I8ee22xB1cx7bS3pZB4Dr33uhU9l0w9UyDhCiXSd6aZAKH8fW9G65z0AvC25KBHVy"  # <--- Pega tu token real aquí
+PHONE_NUMBER_ID = "1511997975323511"  # <--- Tu ID de número de prueba de Meta
 
 @app.get("/")
 def home():
@@ -41,7 +41,7 @@ async def receive_webhook(request: Request):
         
         if messages:
             msg = messages[0]
-            phone_number = msg.get("from") # Número del usuario que escribe
+            phone_number = msg.get("from")
             msg_body = ""
             
             if msg.get("type") == "text":
@@ -51,10 +51,7 @@ async def receive_webhook(request: Request):
                 if interactive_type == "button_reply":
                     msg_body = msg.get("interactive", {}).get("button_reply", {}).get("id", "").strip()
             
-            # Obtener la respuesta del flujo del CESFAM
             response_message = process_conversation_flow(phone_number, msg_body)
-            
-            # Enviar la respuesta de vuelta a WhatsApp usando la API de Meta
             send_whatsapp_message(phone_number, response_message)
             
     except Exception as e:
@@ -108,10 +105,6 @@ def process_conversation_flow(phone: str, text: str):
         hl7_segment = f"PID|||123456^^^MR||Paciente^Ejemplo||{hl7_date}|{sex}"
         
         user_states[phone]["step"] = "COMPLETED"
-        return f"¡Datos sincronizados con éxito en el sistema del CESFAM!\n\n(Trama HL7 generada y enviada al middleware Mirth Connect):\n{hl7_segment}"
-        
-    else:
-        return "Su proceso de confirmación ya se encuentra finalizado. ¡Nos vemos en el CESFAM!"
         return f"¡Datos sincronizados con éxito en el sistema del CESFAM!\n\n(Trama HL7 generada y enviada al middleware Mirth Connect):\n{hl7_segment}"
         
     else:
