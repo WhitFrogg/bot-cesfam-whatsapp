@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi import FastAPI, Request, Response
 import requests
 import json
 
@@ -10,7 +10,7 @@ user_states = {}
 # CREDENCIALES DE META WHATSAPP
 VERIFY_TOKEN = "cesfam123"
 WHATSAPP_TOKEN = "EAAQEXeRY6fMBS5ZAZCIazsGjLiXzToPcEyC8ZBOQLQK0MYPfBADORgT389QozEla2zPUydqoHRMsLAxmC44aYXxr7ksMAP3e6CWMHuOVOHoECV8kfPG4EZCZAr7eFOgm6C1yHnwSoMEvnfOVv0tZA1S2zNChZAtxcSGg4c3ihuZAQIe6DxqCcyZAXafqxhIIBZB1oaBWtQUvEk6s1xthXnCrdj5PYdE0hxHU7ZBv2YhGfdKfBYcpI8pqtIKhMyF76u94YuNt3WMGOS7bROZAXDT9EaZCV"  # <--- Pega tu token real aquí
-PHONE_NUMBER_ID = "1511997975323511"  # <--- Tu ID de número de prueba de Meta
+PHONE_NUMBER_ID = "1511997975323511"  # ID de número de prueba de Meta
 
 @app.get("/")
 def home():
@@ -61,7 +61,7 @@ async def receive_webhook(request: Request):
     except Exception as e:
         print(f"Error procesando el webhook: {e}")
         
-    return {"status": "EVENT_RECEIVED"}}
+    return {"status": "EVENT_RECEIVED"}
 
 def send_whatsapp_message(to_phone: str, message: str):
     url = f"https://graph.facebook.com/v20.0/{PHONE_NUMBER_ID}/messages"
